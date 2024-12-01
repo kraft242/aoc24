@@ -16,9 +16,7 @@ def part_one(data):
 def part_two(data):
     lhs, rhs = parse_data(data)
     rhs_counts = Counter(rhs)
-    return np.sum(
-        lhs * np.array([rhs_counts.get(l, 0) for l in lhs])
-    )
+    return np.sum(lhs * [rhs_counts.get(l, 0) for l in lhs])
 
 
 def main():
