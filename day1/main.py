@@ -1,28 +1,25 @@
 from aocd import get_data
 from collections import Counter
+from io import StringIO
+import numpy as np
 
 
 def parse_data(data):
-    lhs, rhs = [], []
-    for line in data.splitlines():
-        parts = line.split()
-        l, r = int(parts[0]), int(parts[1])
-        lhs.append(l)
-        rhs.append(r)
-    return lhs, rhs
+    both = np.loadtxt(StringIO(data), dtype=int).T
+    return both[0], both[1]
 
 
 def part_one(data):
     lhs, rhs = parse_data(data)
-    distances = [abs(l - r) for l, r in zip(sorted(lhs), sorted(rhs))]
-    return sum(distances)
+    return np.sum(np.abs(np.sort(lhs) - np.sort(rhs)))
 
 
 def part_two(data):
     lhs, rhs = parse_data(data)
     rhs_counts = Counter(rhs)
-    similarity = [l * rhs_counts.get(l, 0) for l in sorted(lhs)]
-    return sum(similarity)
+    return sum(
+        l * rhs_counts.get(l, 0) for l in lhs
+    )
 
 
 def main():
