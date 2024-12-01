@@ -5,8 +5,7 @@ import numpy as np
 
 
 def parse_data(data):
-    both = np.loadtxt(StringIO(data), dtype=int).T
-    return both[0], both[1]
+    return np.loadtxt(StringIO(data), dtype=int).T
 
 
 def part_one(data):
@@ -16,9 +15,10 @@ def part_one(data):
 
 def part_two(data):
     lhs, rhs = parse_data(data)
-    tmp_counts = Counter(rhs)
-    rhs_counts = np.fromiter((tmp_counts.get(l, 0) for l in lhs), dtype=int)
-    return np.sum(lhs * rhs_counts)
+    rhs_counts = Counter(rhs)
+    return np.sum(
+        lhs * np.array([rhs_counts.get(l, 0) for l in lhs])
+    )
 
 
 def main():
