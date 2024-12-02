@@ -34,8 +34,10 @@ def exclude(values, i):
 
 
 def is_safe_with_dampening(report):
-    candidates = (exclude(report, i) for i in range(len(report)))
-    return any(is_safe(c) for c in candidates)
+    if not is_safe(report):
+        candidates = (exclude(report, i) for i in range(len(report)))
+        return any(is_safe(c) for c in candidates)
+    return True
 
 
 def part_two(data):
