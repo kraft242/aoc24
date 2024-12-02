@@ -38,14 +38,18 @@ def part_one(data):
 
 def part_two(data):
     reports = parse_data(data)
-    safe = [is_safe(r) for r in reports]
-    safe_reports = [r for i, r in enumerate(reports) if safe[i]]
-    candidate_reports = [r for i, r in enumerate(reports) if not safe[i]]
-    for c in candidate_reports:
+    safe = []
+    candidates = []
+    for r in reports:
+        if is_safe(r):
+            safe.append(r)
+        else:
+            candidates.append(r)
+    for c in candidates:
         excluded = [c[:i] + c[i + 1:] for i in range(len(c))]
         if any(is_safe(e) for e in excluded):
-            safe_reports.append(c)
-    return len(safe_reports)
+            safe.append(c)
+    return len(safe)
 
 
 def main():
