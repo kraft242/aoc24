@@ -12,8 +12,12 @@ def parse_data(data):
     return [parse_line(l) for l in data.splitlines()]
 
 
+def differences(values):
+    return [l - r for l, r in pairwise(values)]
+
+
 def is_safe(report):
-    diffs = [l - r for l, r in pairwise(report)]
+    diffs = differences(report)
 
     strict_increase = all(LO <= d <= HI for d in diffs)
     strict_decrease = all(-LO >= d >= -HI for d in diffs)
