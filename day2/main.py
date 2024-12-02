@@ -2,42 +2,54 @@ from aocd import get_data
 from itertools import pairwise
 
 
+def parse_line(line):
+    return list(
+        map(int, line.split())
+    )
+
+
 def parse_data(data):
-    reports = []
-    for line in data.splitlines():
-        numbers = [int(n) for n in line.split()]
-        reports.append(numbers)
-    return reports
+    return list(
+        map(parse_line, data.splitlines())
+    )
 
 
 def is_safe(report):
     diffs = [l - r for l, r in pairwise(report)]
 
     lo, hi = 1, 3
-    return any((
-        all(lo <= d <= hi for d in diffs),
-        all(-lo >= d >= -hi for d in diffs)
-    ))
+    return any(
+        (
+            all(lo <= d <= hi for d in diffs),
+            all(-lo >= d >= -hi for d in diffs)
+        )
+    )
 
 
 def part_one(data):
     reports = parse_data(data)
-    return sum(is_safe(r) for r in reports)
+    return sum(
+        map(is_safe, reports)
+    )
 
 
 def exclude(values, i):
     return values[:i] + values[i + 1:]
 
 
+def is_safe_with_dampening(report):
+    candidates = (
+        exclude(report, i) for i in range(len(report))
+    )
+    return any(
+        map(is_safe, candidates)
+    )
+
+
 def part_two(data):
     reports = parse_data(data)
-    report_candidates = (
-        (exclude(r, i) for i in range(len(r)))
-        for r in reports
-    )
     return sum(
-        any(map(is_safe, rc))
-        for rc in report_candidates
+        map(is_safe_with_dampening, reports)
     )
 
 
