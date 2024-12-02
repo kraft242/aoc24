@@ -19,16 +19,13 @@ def sign(x):
 
 
 def is_safe(report):
-    first_sign = sign(report[0] - report[1])
     diffs = [l - r for l, r in pairwise(report)]
+    first_sign = sign(diffs[0])
 
-    monotone = sum(sign(d) == first_sign for d in diffs)
-
-    lo, hi = 1, 3
-    num_diffs = len(diffs)
-    within = sum(lo <= abs(d) <= hi for d in diffs)
-
-    return monotone == within == num_diffs
+    return all((
+        all(sign(d) == first_sign for d in diffs),
+        all(1 <= abs(d) <= 3 for d in diffs)
+    ))
 
 
 def part_one(data):
