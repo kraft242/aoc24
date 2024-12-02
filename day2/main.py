@@ -10,21 +10,13 @@ def parse_data(data):
     return reports
 
 
-def sign(x):
-    if x > 0:
-        return 1
-    if x < 0:
-        return -1
-    return 0
-
-
 def is_safe(report):
     diffs = [l - r for l, r in pairwise(report)]
-    first_sign = sign(diffs[0])
 
-    return all((
-        all(sign(d) == first_sign for d in diffs),
-        all(1 <= abs(d) <= 3 for d in diffs)
+    lo, hi = 1, 3
+    return any((
+        all(lo <= d <= hi for d in diffs),
+        all(-lo >= d >= -hi for d in diffs)
     ))
 
 
@@ -33,20 +25,20 @@ def part_one(data):
     return sum(is_safe(r) for r in reports)
 
 
+def exclude(values, i):
+    return values[:i] + values[i + 1:]
+
+
 def part_two(data):
     reports = parse_data(data)
-    safe = []
-    candidates = []
-    for r in reports:
-        if is_safe(r):
-            safe.append(r)
-        else:
-            candidates.append(r)
-    for c in candidates:
-        excluded = [c[:i] + c[i + 1:] for i in range(len(c))]
-        if any(is_safe(e) for e in excluded):
-            safe.append(c)
-    return len(safe)
+    report_candidates = (
+        (exclude(r, i) for i in range(len(r)))
+        for r in reports
+    )
+    return sum(
+        any(map(is_safe, rc))
+        for rc in report_candidates
+    )
 
 
 def main():
