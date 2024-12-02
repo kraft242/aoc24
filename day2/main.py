@@ -18,7 +18,7 @@ def sign(x):
     return 0
 
 
-def is_safe(report, part_two=False):
+def is_safe(report):
     first_sign = sign(report[0] - report[1])
     diffs = [l - r for l, r in pairwise(report)]
 
