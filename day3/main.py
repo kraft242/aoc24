@@ -6,6 +6,7 @@ def part_one(data):
     whole = data.replace("\n", " ")
     muls = r"mul\((\d+),(\d+)\)"
     matches = re.finditer(muls, whole)
+
     return sum(int(match.group(1)) * int(match.group(2)) for match in matches)
 
 
@@ -20,10 +21,9 @@ def part_two(data):
     enabled = True
     acc = 0
     for m in matches:
-        group = m.group()
-        if group == "don't()":
+        if m.group() == "don't()":
             enabled = False
-        elif group == "do()":
+        elif m.group() == "do()":
             enabled = True
         elif enabled:
             acc += int(m.group(1)) * int(m.group(2))
