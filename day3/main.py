@@ -2,33 +2,30 @@ from aocd import get_data
 import re
 
 
-def part_one(data):
-    whole = data.replace("\n", " ")
-    muls = r"mul\((\d+),(\d+)\)"
-    matches = re.finditer(muls, whole)
+def get_mul_sum(s):
+    mul_pattern = r"mul\((\d+),(\d+)\)"
+    matches = re.findall(mul_pattern, s)
 
-    return sum(int(match.group(1)) * int(match.group(2)) for match in matches)
+    return sum(int(lhs) * int(rhs) for lhs, rhs in matches)
+
+
+def part_one(data):
+    return get_mul_sum(data)
+
+
+def remove_dont_do_sequences(s):
+    dont_pattern = r"don't\(\)"
+    anything_lazy_pattern = r".*?"
+    do_or_eol_pattern = r"(do\(\)|$)"
+
+    banned_pattern = dont_pattern + anything_lazy_pattern + do_or_eol_pattern
+
+    return re.sub(banned_pattern, "", s, flags=re.DOTALL)
 
 
 def part_two(data):
-    whole = data.replace("\n", " ")
-    mul_pattern = r"mul\((\d+),(\d+)\)"
-    dont_pattern = r"don't\(\)"
-    do_pattern = r"do\(\)"
-    complete_pattern = r"|".join((mul_pattern, do_pattern, dont_pattern))
-
-    matches = re.finditer(complete_pattern, whole)
-    enabled = True
-    acc = 0
-    for m in matches:
-        if m.group() == "don't()":
-            enabled = False
-        elif m.group() == "do()":
-            enabled = True
-        elif enabled:
-            acc += int(m.group(1)) * int(m.group(2))
-
-    return acc
+    cleaned = remove_dont_do_sequences(data)
+    return get_mul_sum(cleaned)
 
 
 def main():
