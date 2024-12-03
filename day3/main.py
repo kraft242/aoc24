@@ -14,13 +14,13 @@ def part_one(data):
 
 
 def remove_dont_do_sequences(s):
-    dont_pattern = r"don't\(\)"
-    anything_lazy_pattern = r".*?"
-    do_or_eol_pattern = r"(do\(\)|$)"
+    banned_pattern = re.compile(
+        r"""don't\(\)  # Literal don't()
+        .*?            # As few any matches as possible
+        (do\(\)|$)     # Literal do() OR EOL""", flags=re.VERBOSE | re.DOTALL
+    )
 
-    banned_pattern = dont_pattern + anything_lazy_pattern + do_or_eol_pattern
-
-    return re.sub(banned_pattern, "", s, flags=re.DOTALL)
+    return re.sub(banned_pattern, "", s)
 
 
 def part_two(data):
