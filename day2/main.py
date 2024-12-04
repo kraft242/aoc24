@@ -1,8 +1,6 @@
 from aocd import get_data
 from itertools import pairwise
 
-LO, HI = 1, 3
-
 
 def parse_line(line):
     return [int(n) for n in line.split()]
@@ -12,16 +10,22 @@ def parse_data(data):
     return [parse_line(l) for l in data.splitlines()]
 
 
-def differences(values):
-    return [l - r for l, r in pairwise(values)]
+def sign(x):
+    if x > 0:
+        return 1
+    if x < 0:
+        return -1
+    return 0
 
 
 def is_safe(report):
-    diffs = differences(report)
+    diffs = [l - r for l, r in pairwise(report)]
+    signs = [sign(d) for d in diffs]
 
-    strict_increase = all(LO <= d <= HI for d in diffs)
-    strict_decrease = all(-LO >= d >= -HI for d in diffs)
-    return strict_increase or strict_decrease
+    monotone = all(s == signs[0] for s in signs)
+    in_range = all(1 <= abs(d) <= 3 for d in diffs)
+
+    return monotone and in_range
 
 
 def part_one(data):
