@@ -1,15 +1,20 @@
 from aocd import get_data
 
-deltas = [
-    (0, -1),  # North
-    (1, -1),  # North East
-    (1, 0),   # East
-    (1, 1),   # South East
-    (0, 1),   # South
-    (-1, 1),  # South West
-    (-1, 0),  # West
-    (-1, -1),  # North West
-]
+
+deltas = {
+    "n": (0, -1),  # North
+    "ne": (1, -1),  # North East
+    "e": (1, 0),   # East
+    "se": (1, 1),   # South East
+    "s": (0, 1),   # South
+    "sw": (-1, 1),  # South West
+    "w": (-1, 0),  # West
+    "nw": (-1, -1),  # North West
+}
+
+
+def sum_2d(values):
+    return sum(sum(values, []))
 
 
 class Grid:
@@ -31,10 +36,40 @@ class Grid:
             for x in range(self.x_max):
                 self.count[y][x] = sum(
                     self.count_word_recursive(word, 0, x, y, dx, dy)
-                    for dx, dy in deltas
+                    for dx, dy in deltas.values()
                 )
 
-        return sum(sum(self.count, []))
+        return sum_2d(self.count)
+
+    def count_cross(self, word):
+        variants = {
+            word[0]: word,
+            word[-1]: "".join(reversed(word))
+        }
+        for y in range(self.y_max - 2):
+            for x in range(self.x_max - 2):
+                c = self.grid[y][x]
+                d = self.grid[y][x + 2]
+
+                if not (c in variants.keys() and d in variants.keys()):
+                    continue
+
+                south_east = self.count_word_recursive(
+                    variants[c], 0, x, y, *deltas["se"]
+                )
+
+                if south_east == 0:
+                    continue
+
+                south_west = self.count_word_recursive(
+                    variants[d], 0, x + 2, y, *deltas["sw"]
+                )
+
+                if south_west == 0:
+                    continue
+                self.count[y][x] += 1
+
+        return sum_2d(self.count)
 
     def count_word_recursive(self, word, depth, x, y, dx, dy):
         if not self.index_is_valid(x, y):
@@ -60,7 +95,8 @@ def part_one(data):
 
 
 def part_two(data):
-    return 0
+    grid = Grid(data)
+    return grid.count_cross("MAS")
 
 
 def main():
