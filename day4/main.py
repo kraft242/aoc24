@@ -23,7 +23,7 @@ class Grid:
 
     def count_word(self, word):
         return sum(
-            self.count_word_recursive(word, 0, x, y, dx, dy)
+            self.contains_word(word, 0, x, y, dx, dy)
             for x in range(self.x_max)
             for y in range(self.y_max)
             for dx, dy in deltas.values()
@@ -38,8 +38,8 @@ class Grid:
         return sum(
             (
                 c1 in variant and c2 in variant
-                and self.count_word_recursive(variant[c1], 0, x1, y1, *deltas["se"]) > 0
-                and self.count_word_recursive(variant[c2], 0, x2, y2, *deltas["sw"]) > 0
+                and self.contains_word(variant[c1], 0, x1, y1, *deltas["se"])
+                and self.contains_word(variant[c2], 0, x2, y2, *deltas["sw"])
             )
             for x1 in range(self.x_max - 2)
             for y1 in range(self.y_max - 2)
@@ -50,14 +50,14 @@ class Grid:
     def index_is_valid(self, x, y):
         return self.x_min <= x < self.x_max and self.y_min <= y < self.y_max
 
-    def count_word_recursive(self, word, depth, x, y, dx, dy):
+    def contains_word(self, word, depth, x, y, dx, dy):
         if not self.index_is_valid(x, y) or self.grid[y][x] != word[depth]:
-            return 0
+            return False
 
         if depth == len(word) - 1:
-            return 1
+            return True
 
-        return self.count_word_recursive(word, depth + 1, x + dx, y + dy, dx, dy)
+        return self.contains_word(word, depth + 1, x + dx, y + dy, dx, dy)
 
 
 def part_one(data):
