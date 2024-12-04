@@ -35,15 +35,17 @@ class Grid:
             word[-1]: tuple(reversed(word))
         }
 
+        d = len(word) - 1
+
         return sum(
             (
                 c1 in variant and c2 in variant
                 and self.contains_word(variant[c1], x1, y1, *deltas["se"])
                 and self.contains_word(variant[c2], x2, y2, *deltas["sw"])
             )
-            for x1 in range(self.x_max - 2)
-            for y1 in range(self.y_max - 2)
-            for x2, y2 in [(x1 + 2, y1)]
+            for x1 in range(self.x_max - d)
+            for y1 in range(self.y_max - d)
+            for x2, y2 in [(x1 + d, y1)]
             for c1, c2 in [(self.grid[y1][x1], self.grid[y2][x2])]
         )
 
