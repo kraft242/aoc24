@@ -13,10 +13,6 @@ deltas = {
 }
 
 
-def sum_2d(values):
-    return sum(sum(values, []))
-
-
 class Grid:
     def __init__(self, chars):
         self.grid = [list(line) for line in chars.splitlines()]
@@ -24,22 +20,17 @@ class Grid:
         self.y_min = 0
         self.x_max = len(self.grid[0])
         self.y_max = len(self.grid)
-        self.count = [
-            [0 for _ in range(self.x_max)] for _ in range(self.y_max)
-        ]
-
-    def index_is_valid(self, x, y):
-        return self.x_min <= x < self.x_max and self.y_min <= y < self.y_max
 
     def count_word(self, word):
-        for y in range(self.y_max):
-            for x in range(self.x_max):
-                self.count[y][x] = sum(
+        res = 0
+
+        for x in range(self.x_max):
+            for y in range(self.y_max):
+                res += sum(
                     self.count_word_recursive(word, 0, x, y, dx, dy)
                     for dx, dy in deltas.values()
                 )
-
-        return sum_2d(self.count)
+        return res
 
     def count_cross(self, word):
         variant = {
@@ -47,20 +38,25 @@ class Grid:
             word[-1]: "".join(reversed(word))
         }
 
-        for y1 in range(self.y_max - 2):
-            for x1 in range(self.x_max - 2):
+        res = 0
+
+        for x1 in range(self.x_max - 2):
+            for y1 in range(self.y_max - 2):
                 x2, y2 = x1 + 2, y1
 
                 c1 = self.grid[y1][x1]
                 c2 = self.grid[y2][x2]
 
-                self.count[y1][x1] = (
+                res += (
                     c1 in variant and c2 in variant
                     and self.count_word_recursive(variant[c1], 0, x1, y1, *deltas["se"]) > 0
                     and self.count_word_recursive(variant[c2], 0, x2, y2, *deltas["sw"]) > 0
                 )
 
-        return sum_2d(self.count)
+        return res
+
+    def index_is_valid(self, x, y):
+        return self.x_min <= x < self.x_max and self.y_min <= y < self.y_max
 
     def count_word_recursive(self, word, depth, x, y, dx, dy):
         if not self.index_is_valid(x, y) or self.grid[y][x] != word[depth]:
