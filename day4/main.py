@@ -47,15 +47,14 @@ class Grid:
             word[-1]: "".join(reversed(word))
         }
 
-        for y in range(self.y_max - 2):
-            for x in range(self.x_max - 2):
-                x1, y1 = x, y
-                x2, y2 = x + 2, y
+        for y1 in range(self.y_max - 2):
+            for x1 in range(self.x_max - 2):
+                x2, y2 = x1 + 2, y1
 
                 c1 = self.grid[y1][x1]
                 c2 = self.grid[y2][x2]
 
-                self.count[y][x] = (
+                self.count[y1][x1] = (
                     c1 in variant and c2 in variant
                     and self.count_word_recursive(variant[c1], 0, x1, y1, *deltas["se"]) > 0
                     and self.count_word_recursive(variant[c2], 0, x2, y2, *deltas["sw"]) > 0
@@ -64,8 +63,7 @@ class Grid:
         return sum_2d(self.count)
 
     def count_word_recursive(self, word, depth, x, y, dx, dy):
-        if (not self.index_is_valid(x, y)
-                or self.grid[y][x] != word[depth]):
+        if not self.index_is_valid(x, y) or self.grid[y][x] != word[depth]:
             return 0
 
         if depth == len(word) - 1:
