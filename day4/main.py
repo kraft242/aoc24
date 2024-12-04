@@ -31,8 +31,8 @@ class Grid:
 
     def count_cross(self, word):
         variant = {
-            word[0]: word,
-            word[-1]: "".join(reversed(word))
+            word[0]: tuple(word),
+            word[-1]: tuple(reversed(word))
         }
 
         return sum(
