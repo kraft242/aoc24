@@ -22,15 +22,12 @@ class Grid:
         self.y_max = len(self.grid)
 
     def count_word(self, word):
-        res = 0
-
-        for x in range(self.x_max):
-            for y in range(self.y_max):
-                res += sum(
-                    self.count_word_recursive(word, 0, x, y, dx, dy)
-                    for dx, dy in deltas.values()
-                )
-        return res
+        return sum(
+            self.count_word_recursive(word, 0, x, y, dx, dy)
+            for x in range(self.x_max)
+            for y in range(self.y_max)
+            for dx, dy in deltas.values()
+        )
 
     def count_cross(self, word):
         variant = {
@@ -38,22 +35,17 @@ class Grid:
             word[-1]: "".join(reversed(word))
         }
 
-        res = 0
-
-        for x1 in range(self.x_max - 2):
-            for y1 in range(self.y_max - 2):
-                x2, y2 = x1 + 2, y1
-
-                c1 = self.grid[y1][x1]
-                c2 = self.grid[y2][x2]
-
-                res += (
-                    c1 in variant and c2 in variant
-                    and self.count_word_recursive(variant[c1], 0, x1, y1, *deltas["se"]) > 0
-                    and self.count_word_recursive(variant[c2], 0, x2, y2, *deltas["sw"]) > 0
-                )
-
-        return res
+        return sum(
+            (
+                c1 in variant and c2 in variant
+                and self.count_word_recursive(variant[c1], 0, x1, y1, *deltas["se"]) > 0
+                and self.count_word_recursive(variant[c2], 0, x2, y2, *deltas["sw"]) > 0
+            )
+            for x1 in range(self.x_max - 2)
+            for y1 in range(self.y_max - 2)
+            for x2, y2 in [(x1 + 2, y1)]
+            for c1, c2 in [(self.grid[y1][x1], self.grid[y2][x2])]
+        )
 
     def index_is_valid(self, x, y):
         return self.x_min <= x < self.x_max and self.y_min <= y < self.y_max
