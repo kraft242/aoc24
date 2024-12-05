@@ -4,8 +4,7 @@ from functools import cmp_to_key
 
 def create_ordering(rules):
     parts = [r.split("|") for r in rules.splitlines()]
-    parts = [(int(l), int(r)) for l, r in parts]
-    return set(parts)
+    return {(int(l), int(r)) for l, r in parts}
 
 
 def parse_update(u):
@@ -21,11 +20,11 @@ def parse_data(data):
     return create_ordering(rules), parse_updates(updates)
 
 
-def sort_updates(updates, ordering):
+def sort_updates(updates, less_than):
     def compare(l, r):
-        if (l, r) in ordering:
+        if (l, r) in less_than:
             return -1
-        if (r, l) in ordering:
+        if (r, l) in less_than:
             return 1
         return 0
 
@@ -37,9 +36,9 @@ def midpoint(v):
 
 
 def part_one(data):
-    ordering, updates = parse_data(data)
+    less_than, updates = parse_data(data)
 
-    ordered = sort_updates(updates, ordering)
+    ordered = sort_updates(updates, less_than)
 
     valid = [u for u, o in zip(updates, ordered) if u == o]
 
@@ -47,13 +46,13 @@ def part_one(data):
 
 
 def part_two(data):
-    ordering, updates = parse_data(data)
+    less_than, updates = parse_data(data)
 
-    ordered = sort_updates(updates, ordering)
+    ordered = sort_updates(updates, less_than)
 
     invalid = [u for u, o in zip(updates, ordered) if u != o]
 
-    fixed = sort_updates(invalid, ordering)
+    fixed = sort_updates(invalid, less_than)
 
     return sum(map(midpoint, fixed))
 
