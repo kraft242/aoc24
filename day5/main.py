@@ -40,7 +40,7 @@ def part_one(data):
 
     ordered = sort_updates(updates, less_than)
 
-    valid = [u for u, o in zip(updates, ordered) if u == o]
+    valid = (u for u, o in zip(updates, ordered) if u == o)
 
     return sum(map(midpoint, valid))
 
@@ -50,9 +50,7 @@ def part_two(data):
 
     ordered = sort_updates(updates, less_than)
 
-    invalid = [u for u, o in zip(updates, ordered) if u != o]
-
-    fixed = sort_updates(invalid, less_than)
+    fixed = (o for u, o in zip(updates, ordered) if u != o)
 
     return sum(map(midpoint, fixed))
 
