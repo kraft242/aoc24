@@ -3,7 +3,7 @@ from functools import cmp_to_key
 
 
 def create_ordering(rules):
-    parts = [r.split("|") for r in rules.splitlines()]
+    parts = (r.split("|") for r in rules.splitlines())
     return {(int(l), int(r)) for l, r in parts}
 
 
@@ -35,24 +35,22 @@ def midpoint(v):
     return v[len(v) // 2]
 
 
-def part_one(data):
+def solve(data, condition):
     less_than, updates = parse_data(data)
-
     ordered = sort_updates(updates, less_than)
+    filtered = (o for u, o in zip(updates, ordered) if condition(u, o))
 
-    valid = (u for u, o in zip(updates, ordered) if u == o)
+    return sum(map(midpoint, filtered))
 
-    return sum(map(midpoint, valid))
+
+def part_one(data):
+    def condition(l, r): return l == r
+    return solve(data, condition)
 
 
 def part_two(data):
-    less_than, updates = parse_data(data)
-
-    ordered = sort_updates(updates, less_than)
-
-    fixed = (o for u, o in zip(updates, ordered) if u != o)
-
-    return sum(map(midpoint, fixed))
+    def condition(l, r): return l != r
+    return solve(data, condition)
 
 
 def main():
