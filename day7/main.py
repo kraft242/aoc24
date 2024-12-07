@@ -25,7 +25,7 @@ def concat(a, b):
 def is_possible(target, values, part_two=False):
     ops = (add, mul, concat) if part_two else (add, mul)
 
-    l = len(values)
+    length = len(values)
 
     stack = [(values[0], 1)]
 
@@ -35,7 +35,7 @@ def is_possible(target, values, part_two=False):
         if acc > target:
             continue
 
-        if depth == l:
+        if depth == length:
             if acc == target:
                 return True
             continue
