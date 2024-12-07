@@ -1,5 +1,6 @@
 from aocd import get_data
 from operator import add, mul
+from math import log10 as log
 
 
 def parse_line(line):
@@ -8,7 +9,12 @@ def parse_line(line):
     return int(lhs), values
 
 
-def is_possible(target, values):
+def concat(a, b):
+    b_digits = int(log(b))
+    return a * 10 ** (b_digits + 1) + b
+
+
+def is_possible(target, values, part_two=False):
     prev = {0}
 
     for v in values:
@@ -16,6 +22,9 @@ def is_possible(target, values):
         for p in prev:
             curr.add(add(p, v))
             curr.add(mul(p, v))
+            if part_two:
+                curr.add(concat(p, v))
+
         prev = curr
 
     return target in prev
@@ -29,7 +38,10 @@ def part_one(data):
 
 
 def part_two(data):
-    return 0
+    parsed = (parse_line(line) for line in data.splitlines())
+    return sum(
+        t * is_possible(t, values, part_two=True) for t, values in parsed
+    )
 
 
 def main():
