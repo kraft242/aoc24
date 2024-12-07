@@ -1,5 +1,6 @@
 from aocd import get_data
 from math import log10 as log, floor
+import multiprocessing as mp
 
 
 def parse_line(line):
@@ -36,18 +37,24 @@ def is_possible(target, values, part_two=False):
     return target in curr
 
 
+def solve(data, part_two=False):
+    parsed = [parse_line(line) for line in data.splitlines()]
+    args = ((t, vs, part_two) for t, vs in parsed)
+
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        possible = pool.starmap(is_possible, args)
+
+        return sum(
+            t * p for (t, _), p in zip(parsed, possible)
+        )
+
+
 def part_one(data):
-    parsed = (parse_line(line) for line in data.splitlines())
-    return sum(
-        t * is_possible(t, values) for t, values in parsed
-    )
+    return solve(data)
 
 
 def part_two(data):
-    parsed = (parse_line(line) for line in data.splitlines())
-    return sum(
-        t * is_possible(t, values, part_two=True) for t, values in parsed
-    )
+    return solve(data, part_two=True)
 
 
 def main():
