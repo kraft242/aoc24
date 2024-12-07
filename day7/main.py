@@ -27,19 +27,24 @@ def is_possible(target, values, part_two=False):
 
     l = len(values)
 
-    def evaluate(acc, depth):
+    stack = [(values[0], 1)]
+
+    while stack:
+        acc, depth = stack.pop()
+
         if acc > target:
-            return False
+            continue
 
         if depth == l:
-            return acc == target
+            if acc == target:
+                return True
+            continue
 
-        return any(
-            evaluate(op(acc, values[depth]), depth + 1)
+        stack.extend(
+            (op(acc, values[depth]), depth + 1)
             for op in ops
         )
-
-    return evaluate(values[0], 1)
+    return False
 
 
 def solve(data, part_two=False):
