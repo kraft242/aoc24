@@ -1,6 +1,7 @@
 from aocd import get_data
 from math import log10 as log, floor
 import multiprocessing as mp
+from time import perf_counter_ns
 
 
 def parse_line(line):
@@ -24,17 +25,21 @@ def concat(a, b):
 def is_possible(target, values, part_two=False):
     ops = (add, mul, concat) if part_two else (add, mul)
 
-    curr = {0}
+    l = len(values)
 
-    for v in values:
-        curr = {
-            op(c, v)
-            for c in curr
+    def evaluate(acc, depth):
+        if acc > target:
+            return False
+
+        if depth == l:
+            return acc == target
+
+        return any(
+            evaluate(op(acc, values[depth]), depth + 1)
             for op in ops
-            if c <= target
-        }
+        )
 
-    return target in curr
+    return evaluate(values[0], 1)
 
 
 def solve(data, part_two=False):
