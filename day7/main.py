@@ -1,7 +1,7 @@
 from aocd import get_data
 from math import log10 as log, floor
 import multiprocessing as mp
-from time import perf_counter_ns
+from time import perf_counter
 
 
 def parse_line(line):
@@ -44,6 +44,7 @@ def is_possible(target, values, part_two=False):
             (op(acc, values[depth]), depth + 1)
             for op in ops
         )
+
     return False
 
 
@@ -54,9 +55,9 @@ def solve(data, part_two=False):
     with mp.Pool(processes=mp.cpu_count()) as pool:
         possible = pool.starmap(is_possible, args)
 
-        return sum(
-            t * p for (t, _), p in zip(parsed, possible)
-        )
+    return sum(
+        t * p for (t, _), p in zip(parsed, possible)
+    )
 
 
 def part_one(data):
