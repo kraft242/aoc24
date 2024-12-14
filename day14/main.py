@@ -1,6 +1,8 @@
 from aocd import get_data
 from time import perf_counter_ns
 import numpy as np
+from PIL import Image
+import multiprocessing as mp
 import re
 
 
@@ -11,18 +13,22 @@ def parse_line(line):
     return px, py, vx, vy
 
 
-def part_one(data):
+def get_grid_at(parsed, steps):
     width, height = 101, 103
-    steps = 100
-    grid = np.zeros((height, width), dtype=int)
 
-    parsed = [parse_line(line) for line in data.split("\n")]
+    grid = np.zeros((height, width), dtype=int)
 
     xs = ((px + steps * vx) % width for px, _, vx, _ in parsed)
     ys = ((py + steps * vy) % height for _, py, _, vy in parsed)
 
     for x, y in zip(xs, ys):
         grid[y, x] += 1
+
+    return grid
+
+
+def get_safety_score(grid):
+    height, width = grid.shape
 
     x_mid, y_mid = width // 2, height // 2
 
@@ -36,24 +42,48 @@ def part_one(data):
     return np.prod([np.sum(q) for q in quadrants])
 
 
+def part_one(data):
+
+    parsed = [parse_line(line) for line in data.split("\n")]
+
+    grid = get_grid_at(parsed, steps=100)
+
+    return get_safety_score(grid)
+
+
+def write_array_to_image(array, filename):
+    binary_image = np.where(array > 0, 255, 0).astype(np.uint8)
+
+    image = Image.fromarray(binary_image, mode="L")
+
+    image.save(filename)
+
+
 def part_two(data):
-    return 8
+    lo, hi = 0, 10000
+
+    steps = list(range(lo, hi))
+
+    parsed = [parse_line(line) for line in data.split("\n")]
+
+    grid_args = [(parsed, step) for step in steps]
+
+    nprocs = mp.cpu_count()
+
+    with mp.Pool(processes=nprocs) as pool:
+        grids = pool.starmap(get_grid_at, grid_args)
+        safety_scores = pool.map(get_safety_score, grids)
+        tuples = list(zip(safety_scores, steps, grids))
+        image_args = [
+            (grid, f"images/score{score}step{step:08d}.png") for score, step, grid in tuples
+        ]
+        pool.starmap(write_array_to_image, image_args)
+
+    return 0
 
 
 def main():
     data = get_data(day=14, year=2024)
-#    data = """p=0,4 v=3,-3
-# p=6,3 v=-1,-3
-# p=10,3 v=-1,2
-# p=2,0 v=2,-1
-# p=0,0 v=1,3
-# p=3,0 v=-2,-2
-# p=7,6 v=-1,-3
-# p=3,0 v=-1,-2
-# p=9,3 v=2,3
-# p=7,3 v=-1,2
-# p=2,4 v=2,-3
-# p=9,5 v=-3,-3"""
     t0 = perf_counter_ns()
     one = part_one(data)
     two = part_two(data)
