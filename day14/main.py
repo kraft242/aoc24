@@ -13,13 +13,21 @@ def parse_line(line):
     return px, py, vx, vy
 
 
+def get_coordinates_at(parsed, steps):
+    width, height = 101, 103
+
+    xs = [(px + steps * vx) % width for px, _, vx, _ in parsed]
+    ys = [(py + steps * vy) % height for _, py, _, vy in parsed]
+
+    return xs, ys
+
+
 def get_grid_at(parsed, steps):
     width, height = 101, 103
 
     grid = np.zeros((height, width), dtype=int)
 
-    xs = ((px + steps * vx) % width for px, _, vx, _ in parsed)
-    ys = ((py + steps * vy) % height for _, py, _, vy in parsed)
+    xs, ys = get_coordinates_at(parsed, steps)
 
     for x, y in zip(xs, ys):
         grid[y, x] += 1
@@ -59,6 +67,13 @@ def write_array_to_image(array, filename):
     image.save(filename)
 
 
+def compute_variance(values):
+    n = len(values)
+    mean = sum(values) / n
+    variance = sum((x - mean) ** 2 for x in values) / (n - 1)
+    return variance
+
+
 def part_two(data):
     lo, hi = 0, 10000
 
@@ -73,13 +88,12 @@ def part_two(data):
     with mp.Pool(processes=nprocs) as pool:
         grids = pool.starmap(get_grid_at, grid_args)
         safety_scores = pool.map(get_safety_score, grids)
-        tuples = list(zip(safety_scores, steps, grids))
-        image_args = [
-            (grid, f"images/score{score}step{step:08d}.png") for score, step, grid in tuples
-        ]
-        pool.starmap(write_array_to_image, image_args)
 
-    return 0
+    tuples = list(zip(safety_scores, steps, grids))
+    tuples.sort(key=lambda x: x[0])
+    _, step, _ = tuples[0]
+
+    return step
 
 
 def main():
