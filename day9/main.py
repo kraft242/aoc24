@@ -4,6 +4,16 @@ from itertools import zip_longest
 PAD = -1
 
 
+def print_disk(disk):
+    for n in disk:
+        if n == PAD:
+            c = "."
+        else:
+            c = str(n)
+        print(c, end="")
+    print()
+
+
 def part_one(data):
     values = [int(n) for n in list(data)]
     size = len(values)
@@ -18,23 +28,23 @@ def part_one(data):
         curr += 1
         disk.extend(PAD for _ in range(p))
 
-    result = []
     i, j = 0, len(disk) - 1
     while i <= j:
-        vi, vj = disk[i], disk[j]
-        if vi != PAD:
-            result.append(vi)
-            i += 1
-        elif vj == PAD:
-            j -= 1
-        elif vj != PAD:
-            result.append(vj)
-            i += 1
-            j -= 1
-        else:
-            raise ValueError("Invalid")
+        match (disk[i] == PAD, disk[j] == PAD):
+            case True, True:
+                j -= 1
+            case False, True:
+                j -= 1
+            case True, False:
+                disk[i], disk[j] = disk[j], disk[i]
+                i += 1
+                j -= 1
+            case False, False:
+                i += 1
+            case _:
+                raise ValueError("Invalid")
 
-    return sum(i*n for i, n in enumerate(result))
+    return sum(i*n if n != PAD else 0 for i, n in enumerate(disk))
 
 
 def part_two(data):
