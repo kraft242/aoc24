@@ -14,7 +14,7 @@ def print_disk(disk):
     print()
 
 
-def part_one(data):
+def get_disk(data):
     values = [int(n) for n in list(data)]
     size = len(values)
     disk = []
@@ -27,6 +27,12 @@ def part_one(data):
         disk.extend(curr for _ in range(n))
         curr += 1
         disk.extend(PAD for _ in range(p))
+
+    return disk
+
+
+def part_one(data):
+    disk = get_disk(data)
 
     i, j = 0, len(disk) - 1
     while i <= j:
@@ -48,7 +54,53 @@ def part_one(data):
 
 
 def part_two(data):
-    return 0
+    disk = get_disk(data)
+
+    def get_sequence_start(index, c):
+        start = index
+        while disk[start] == c:
+            start -= 1
+        return start + 1
+
+    def get_sequence_end(index, c):
+        end = index
+        while disk[end] == c:
+            end += 1
+        return end - 1
+
+    # print("Before:")
+    # print_disk(disk)
+
+    j = len(disk) - 1
+    while j >= 0:
+        k = get_sequence_start(j, disk[j])
+        dj = j - k + 1
+        if disk[j] == PAD:
+            j -= dj
+            continue
+
+        # print(f"j: {j}, k: {k}, dj: {dj}")
+        i = 0
+        while i < j - dj:
+            end = get_sequence_end(i, disk[i])
+            di = end - i + 1
+            if disk[i] == PAD and di >= dj:
+                print(f"j: {j}, i: {i}, end: {end}, di: {di}, dj: {dj}")
+                # print(f"i: {i}, end: {end}, di: {di}")
+                ilo, ihi = i, i + dj
+                jlo, jhi = j - dj + 1, j + 1
+                # print(f"ilo: {ilo}, ihi: {ihi}, jlo: {jlo}, jhi: {jhi}")
+                disk[ilo: ihi], disk[jlo:jhi] = disk[jlo:jhi], disk[ilo:ihi]
+                break
+            i += di
+            # i += di
+        # print_disk(disk)
+        j -= dj
+
+    # print("After: ")
+    # print_disk(disk)
+
+    return sum(i*n if n != PAD else 0 for i, n in enumerate(disk))
 
 
 def main():
