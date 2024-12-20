@@ -1,5 +1,6 @@
 from aocd import get_data
 from time import perf_counter_ns
+from functools import lru_cache
 import multiprocessing as mp
 
 
@@ -14,6 +15,7 @@ def parse_data(data):
     return towels, patterns, pattern_lengths
 
 
+@lru_cache(maxsize=None)
 def ways_to_construct(towel, patterns, pattern_lengths):
     tl = len(towel) + 1
 
@@ -30,6 +32,7 @@ def ways_to_construct(towel, patterns, pattern_lengths):
     return ways[-1]
 
 
+@lru_cache(maxsize=None)
 def ways_to_solve(data):
     towels, patterns, pattern_lengths = parse_data(data)
 
@@ -42,15 +45,13 @@ def ways_to_solve(data):
 
 
 def part_one(data):
-    ways = ways_to_solve(data)
+    def positive(x): return x > 0
 
-    return sum(w > 0 for w in ways)
+    return sum(map(positive, ways_to_solve(data)))
 
 
 def part_two(data):
-    ways = ways_to_solve(data)
-
-    return sum(ways)
+    return sum(ways_to_solve(data))
 
 
 def main():
