@@ -1,10 +1,11 @@
-# from aocd import get_data
+from aocd import get_data
 from time import perf_counter_ns
+from itertools import pairwise
+import multiprocessing as mp
 
 
-def get_data(filename):
-    with open(filename) as f:
-        return [int(l) for l in f.readlines()]
+def parse_data(data):
+    return list(map(int, data.splitlines()))
 
 
 def mix(lhs, rhs):
@@ -23,14 +24,17 @@ def next_secret(secret):
     return three
 
 
+def get_nth_secret(secret, n):
+    for _ in range(n):
+        secret = next_secret(secret)
+    return secret
+
+
 def part_one(data):
-    res = []
-    for secret in data:
-        for _ in range(2000):
-            secret = next_secret(secret)
-        res.append(secret)
-        print(secret)
-    print(res)
+    n = 2000
+    args = [(secret, n) for secret in data]
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        res = pool.starmap(get_nth_secret, args)
     return sum(res)
 
 
@@ -39,9 +43,8 @@ def part_two(data):
 
 
 def main():
-    # data = get_data(day=19, year=2024)
-    data = get_data("input.in")
-    # data = [1, 10, 100, 2024]
+    data = get_data(day=22, year=2024)
+    data = parse_data(data)
     t0 = perf_counter_ns()
     one = part_one(data)
     two = part_two(data)
