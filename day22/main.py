@@ -1,6 +1,7 @@
 from aocd import get_data
 from time import perf_counter_ns
 from itertools import pairwise
+from collections import defaultdict
 import multiprocessing as mp
 
 
@@ -18,28 +19,65 @@ def prune(secret):
 
 
 def next_secret(secret):
-    one = prune(mix(secret << 6, secret))
-    two = prune(mix(one >> 5, one))
-    three = prune(mix(two << 11, two))
-    return three
+    a = prune(mix(secret << 6, secret))
+    b = prune(mix(a >> 5, a))
+    return prune(mix(b << 11, b))
 
 
-def get_nth_secret(secret, n):
+def get_secrets(s, n):
+    secrets = [s]
     for _ in range(n):
-        secret = next_secret(secret)
-    return secret
+        s = next_secret(s)
+        secrets.append(s)
+    return secrets
 
 
 def part_one(data):
     n = 2000
     args = [(secret, n) for secret in data]
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        res = pool.starmap(get_nth_secret, args)
-    return sum(res)
+        secrets = pool.starmap(get_secrets, args)
+    return sum(s[n - 1] for s in secrets)
+
+
+def get_prices(secrets):
+    return [s % 10 for s in secrets]
+
+
+def get_differences(secrets):
+    return [a - b for a, b in pairwise(secrets)]
+
+
+def get_diff_prices(prices, diffs):
+    n = 4
+    res = []
+    seen = set()
+    for i in range(n - 1, len(diffs)):
+        d = tuple(diffs[i - n + 1:i + 1])
+        p = prices[i]
+        if d in seen:
+            continue
+        seen.add(d)
+        res.append((d, p))
+    return res
 
 
 def part_two(data):
-    return 0
+    n = 2000
+    args = [(secret, n) for secret in data]
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        secrets = pool.starmap(get_secrets, args)
+        prices = pool.map(get_prices, secrets)
+        diffs = pool.map(get_differences, prices)
+        prices = [p[1:] for p in prices]
+        diff_prices = pool.starmap(get_diff_prices, zip(prices, diffs))
+    res = defaultdict(list)
+    for dps in diff_prices:
+        for d, p in dps:
+            res[d].append(p)
+    return max(
+        sum(ps) for ps in res.values()
+    )
 
 
 def main():
