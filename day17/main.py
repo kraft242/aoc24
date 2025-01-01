@@ -16,9 +16,7 @@ def parse_data(data):
     return registers, numbers
 
 
-def part_one(data):
-    registers, program = parse_data(data)
-
+def solve(registers, program):
     output = []
 
     def get_combo(op):
@@ -35,15 +33,16 @@ def part_one(data):
         raise ValueError("Invalid operation")
 
     def execute_instruction(ip, opcode, operand):
+        combo = get_combo(operand)
         match opcode:
             case 0:
-                registers["A"] = registers["A"] // (2 ** get_combo(operand))
+                registers["A"] = registers["A"] // (2 ** combo)
                 return ip + 2
             case 1:
                 registers["B"] = registers["B"] ^ operand
                 return ip + 2
             case 2:
-                registers["B"] = get_combo(operand) % 8
+                registers["B"] = combo % 8
                 return ip + 2
             case 3:
                 return operand if registers["A"] != 0 else ip + 2
@@ -51,27 +50,51 @@ def part_one(data):
                 registers["B"] = registers["B"] ^ registers["C"]
                 return ip + 2
             case 5:
-                output.append(get_combo(operand) % 8)
+                output.append(combo % 8)
                 return ip + 2
             case 6:
-                registers["B"] = registers["A"] // (2 ** get_combo(operand))
+                registers["B"] = registers["A"] // (2 ** combo)
                 return ip + 2
             case 7:
-                registers["C"] = registers["A"] // (2 ** get_combo(operand))
+                registers["C"] = registers["A"] // (2 ** combo)
                 return ip + 2
             case _:
                 raise ValueError("Invalid operation")
 
-    ip = 0
-    while 0 <= ip < len(program):
-        op, combo = program[ip], program[ip + 1]
-        ip = execute_instruction(ip, op, combo)
+    def run():
+        ip = 0
+        while 0 <= ip < len(program):
+            op, combo = program[ip], program[ip + 1]
+            ip = execute_instruction(ip, op, combo)
+
+    run()
+
+    return output
+
+
+def part_one(data):
+    registers, program = parse_data(data)
+
+    output = solve(registers, program)
 
     return ",".join(map(str, output))
 
 
 def part_two(data):
-    return 0
+    registers, program = parse_data(data)
+
+    l = len(program)
+
+    A = 0
+    B = registers["B"]
+    C = registers["C"]
+
+    for i in reversed(range(l)):
+        A = A << 3
+        while solve({"A": A, "B": B, "C": C}, program) != program[i:]:
+            A += 1
+
+    return A
 
 
 def main():
