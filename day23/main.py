@@ -4,33 +4,31 @@ import networkx as nx
 
 
 def parse_data(data):
-    G = nx.Graph()
+    edges = (line.split("-") for line in data.splitlines())
 
-    edges = [line.split("-") for line in data.splitlines()]
-
-    G.add_edges_from(edges)
-
-    return G
+    return nx.Graph(edges)
 
 
 def part_one(data):
     G = parse_data(data)
 
-    triplets = (set(c) for c in nx.enumerate_all_cliques(G) if len(c) == 3)
+    starts_with_t = {n for n in G.nodes if n.startswith("t")}
 
-    starts_with_t = set(n for n in G.nodes if n.startswith("t"))
-
-    return sum(len(t & starts_with_t) > 0 for t in triplets)
+    return sum(
+        1 for c in nx.enumerate_all_cliques(G)
+        if len(c) == 3
+        and set(c) & starts_with_t
+    )
 
 
 def part_two(data):
     G = parse_data(data)
 
-    cliques = nx.find_cliques(G)
-
-    max_clique = max(cliques, key=len)
-
-    return ",".join(sorted(max_clique))
+    return ",".join(
+        sorted(
+            max(nx.find_cliques(G), key=len)
+        )
+    )
 
 
 def main():
