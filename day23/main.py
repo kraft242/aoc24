@@ -3,59 +3,34 @@ from time import perf_counter_ns
 import networkx as nx
 
 
-def part_one(data):
-    nodes = set()
-
-    for line in data.splitlines():
-        l, r = line.split("-")
-        nodes.add(l)
-        nodes.add(r)
-
-    node_to_id = {n: i for i, n in enumerate(nodes)}
-    id_to_node = {i: n for n, i in node_to_id.items()}
-
+def parse_data(data):
     G = nx.Graph()
 
-    for line in data.splitlines():
-        l, r = line.split("-")
-        lid, rid = node_to_id[l], node_to_id[r]
-        G.add_edge(lid, rid)
+    edges = [line.split("-") for line in data.splitlines()]
 
-    triplets = [c for c in nx.enumerate_all_cliques(G) if len(c) == 3]
+    G.add_edges_from(edges)
 
-    starts_with_t = set(
-        i for node, i in node_to_id.items()
-        if node.startswith("t")
-    )
+    return G
 
-    found = set(
-        (a, b, c) for a, b, c in triplets
-        if a in starts_with_t or b in starts_with_t or c in starts_with_t
-    )
 
-    return len(found)
+def part_one(data):
+    G = parse_data(data)
+
+    triplets = (set(c) for c in nx.enumerate_all_cliques(G) if len(c) == 3)
+
+    starts_with_t = set(n for n in G.nodes if n.startswith("t"))
+
+    return sum(len(t & starts_with_t) > 0 for t in triplets)
 
 
 def part_two(data):
-    nodes = set()
-    for line in data.splitlines():
-        l, r = line.split("-")
-        nodes.add(l)
-        nodes.add(r)
-    node_to_id = {n: i for i, n in enumerate(nodes)}
-    id_to_node = {i: n for n, i in node_to_id.items()}
-
-    G = nx.Graph()
-
-    for line in data.splitlines():
-        l, r = line.split("-")
-        lid, rid = node_to_id[l], node_to_id[r]
-        G.add_edge(lid, rid)
+    G = parse_data(data)
 
     cliques = nx.find_cliques(G)
+
     max_clique = max(cliques, key=len)
-    computers = [id_to_node[i] for i in max_clique]
-    return ",".join(sorted(computers))
+
+    return ",".join(sorted(max_clique))
 
 
 def main():
