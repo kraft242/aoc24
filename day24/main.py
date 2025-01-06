@@ -42,15 +42,11 @@ def solve(active, inactive):
     return active
 
 
-def part_one(data):
-    active, inactive = parse_data(data)
-
-    active = solve(active, inactive)
-
+def get_value(active, first_char):
     result = [
         (wire, int(value))
         for wire, value in active.items()
-        if wire.startswith("z")
+        if wire.startswith(first_char)
     ]
 
     result.sort(reverse=True)
@@ -60,7 +56,26 @@ def part_one(data):
     return int(binary, 2)
 
 
+def part_one(data):
+    active, inactive = parse_data(data)
+
+    active = solve(active, inactive)
+
+    return get_value(active, "z")
+
+
 def part_two(data):
+    active, inactive = parse_data(data)
+
+    active = solve(active, inactive)
+
+    x = get_value(active, "x")
+    y = get_value(active, "y")
+    z = get_value(active, "z")
+
+    print(f"Inputs: x={x}, y={y}")
+    print(f"Outputs: actual={z}, expected={x + y}, difference={(x + y) ^ z:b}")
+
     return 0
 
 
