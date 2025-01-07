@@ -52,15 +52,19 @@ def get_shapes(data):
     return shapes
 
 
-def get_perimeters(shapes):
-    return [
-        sum(
-            (y + dy, x + dx) not in shape
-            for y, x in shape
-            for dy, dx in delta
-        )
-        for shape in shapes
-    ]
+def get_perimeters(data, shapes):
+    height, width = len(data), len(data[0])
+
+    perimeters = np.zeros((height, width))
+
+    for shape in shapes:
+        for y, x in shape:
+            perimeters[y, x] = sum(
+                (y + dy, x + dx) not in shape
+                for dy, dx in delta
+            )
+
+    return perimeters
 
 
 def part_one(data):
@@ -70,29 +74,32 @@ def part_one(data):
 
     areas = [len(shape) for shape in shapes]
 
-    perimeters = get_perimeters(shapes)
+    perimeters = get_perimeters(data, shapes)
+
+    ps = [sum(perimeters[y, x] for y, x in shape) for shape in shapes]
 
     areas = [int(a) for a in areas]
-    perimeters = [int(p) for p in perimeters]
+    ps = [int(p) for p in ps]
 
-    return sum(a * p for a, p in zip(areas, perimeters))
+    return sum(a * p for a, p in zip(areas, ps))
 
 
 def part_two(data):
     return 8
 
+
 def main():
-    # data = get_data(day=12, year=2024)
-    data = """RRRRIICCFF
-RRRRIICCCF
-VVRRRCCFFF
-VVRCCCJFFF
-VVVVCJJCFE
-VVIVCCJJEE
-VVIIICJJEE
-MIIIIIJJEE
-MIIISIJEEE
-MMMISSJEEE"""
+    data = get_data(day=12, year=2024)
+#    data = """RRRRIICCFF
+# RRRRIICCCF
+# VVRRRCCFFF
+# VVRCCCJFFF
+# VVVVCJJCFE
+# VVIVCCJJEE
+# VVIIICJJEE
+# MIIIIIJJEE
+# MIIISIJEEE
+# MMMISSJEEE"""
     one = part_one(data)
     two = part_two(data)
     print(f"Part one: {one}")
