@@ -85,17 +85,17 @@ def part_two(data):
     def is_wrong(l, op, r, out):
         both_inputs = is_input(l) and is_input(r)
 
-        valid_output = (
+        invalid_output = (
             is_output(out)
             and op != "XOR"
             and out[1:] != "45"
         )
-        valid_intermediate = (
+        invalid_intermediate = (
             op == "XOR"
             and not is_output(out)
             and not both_inputs
         )
-        valid_inputs = (
+        invalid_input = (
             both_inputs
             and not (l[1:] == "00" and r[1:] == "00")
             and (
@@ -104,7 +104,7 @@ def part_two(data):
             )
         )
 
-        return valid_output or valid_intermediate or valid_inputs
+        return invalid_output or invalid_intermediate or invalid_input
 
     wrong = {rule for rule in inactive if is_wrong(*rule)}
     outputs = {out for _, _, _, out in wrong}
