@@ -5,6 +5,8 @@ from PIL import Image
 import multiprocessing as mp
 import re
 
+WIDTH, HEIGHT = 101, 103
+
 
 def parse_line(line):
     number_pattern = r"[-\d]+"
@@ -13,50 +15,32 @@ def parse_line(line):
     return px, py, vx, vy
 
 
-def get_coordinates_at(parsed, steps):
-    width, height = 101, 103
+def parse_data(data):
+    return [parse_line(line) for line in data.splitlines()]
 
-    xs = [(px + steps * vx) % width for px, _, vx, _ in parsed]
-    ys = [(py + steps * vy) % height for _, py, _, vy in parsed]
+
+def get_coordinates_at(parsed, step):
+    xs = [(px + step * vx) % WIDTH for px, _, vx, _ in parsed]
+    ys = [(py + step * vy) % HEIGHT for _, py, _, vy in parsed]
 
     return xs, ys
 
 
-def get_grid_at(parsed, steps):
-    width, height = 101, 103
-
-    grid = np.zeros((height, width), dtype=int)
-
-    xs, ys = get_coordinates_at(parsed, steps)
-
-    for x, y in zip(xs, ys):
-        grid[y, x] += 1
-
-    return grid
-
-
-def get_safety_score(grid):
-    height, width = grid.shape
-
-    x_mid, y_mid = width // 2, height // 2
-
-    q0 = grid[0: y_mid, 0: x_mid]
-    q1 = grid[0: y_mid, x_mid + 1:]
-    q2 = grid[y_mid + 1:, 0: x_mid]
-    q3 = grid[y_mid + 1:, x_mid + 1:]
-
-    quadrants = [q0, q1, q2, q3]
-
-    return np.prod([np.sum(q) for q in quadrants])
+def get_safety_score(xs, ys):
+    x_mid, y_mid = WIDTH // 2, HEIGHT // 2
+    q0 = sum(1 for x, y in zip(xs, ys) if x < x_mid and y < y_mid)
+    q1 = sum(1 for x, y in zip(xs, ys) if x > x_mid and y < y_mid)
+    q2 = sum(1 for x, y in zip(xs, ys) if x < x_mid and y > y_mid)
+    q3 = sum(1 for x, y in zip(xs, ys) if x > x_mid and y > y_mid)
+    return q0 * q1 * q2 * q3
 
 
 def part_one(data):
+    parsed = parse_data(data)
 
-    parsed = [parse_line(line) for line in data.split("\n")]
+    xs, ys = get_coordinates_at(parsed, step=100)
 
-    grid = get_grid_at(parsed, steps=100)
-
-    return get_safety_score(grid)
+    return get_safety_score(xs, ys)
 
 
 def write_array_to_image(array, filename):
@@ -67,33 +51,31 @@ def write_array_to_image(array, filename):
     image.save(filename)
 
 
-def compute_variance(values):
-    n = len(values)
-    mean = sum(values) / n
-    variance = sum((x - mean) ** 2 for x in values) / (n - 1)
-    return variance
-
-
 def part_two(data):
     lo, hi = 0, 10000
 
     steps = list(range(lo, hi))
 
-    parsed = [parse_line(line) for line in data.split("\n")]
+    parsed = parse_data(data)
 
     grid_args = [(parsed, step) for step in steps]
 
-    nprocs = mp.cpu_count()
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        coords = pool.starmap(get_coordinates_at, grid_args)
+        safety_score_args = [(xs, ys) for xs, ys in coords]
 
-    with mp.Pool(processes=nprocs) as pool:
-        grids = pool.starmap(get_grid_at, grid_args)
-        safety_scores = pool.map(get_safety_score, grids)
+        safety_scores = pool.starmap(
+            get_safety_score, safety_score_args
+        )
 
-    tuples = list(zip(safety_scores, steps, grids))
-    tuples.sort(key=lambda x: x[0])
-    _, step, _ = tuples[0]
+    tuples = zip(safety_scores, steps)
 
-    return step
+    def score(t):
+        s, _ = t
+        return s
+
+    _, n = min(tuples, key=score)
+    return n
 
 
 def main():
