@@ -31,6 +31,10 @@ def get_disk(data):
     return disk
 
 
+def get_checksum(disk):
+    return sum(i * n if n != PAD else 0 for i, n in enumerate(disk))
+
+
 def part_one(data):
     disk = get_disk(data)
 
@@ -50,62 +54,72 @@ def part_one(data):
             case _:
                 raise ValueError("Invalid")
 
-    return sum(i*n if n != PAD else 0 for i, n in enumerate(disk))
+    return get_checksum(disk)
+
+
+def get_segments(disk):
+    segments = []
+
+    val, start, size = disk[0], 0, 0
+
+    i = 0
+
+    while i < len(disk):
+        if disk[i] == val:
+            size += 1
+            i += 1
+        else:
+            segments.append((val, start, size))
+            val, start, size = disk[i], i, 1
+            i += 1
+
+    segments.append((val, start, size))
+    return segments
+
+
+def get_pad_list_index(pads, val_index, val_len):
+    for j, (pad_index, pad_len) in enumerate(pads):
+        if pad_index < val_index and pad_len >= val_len:
+            return j
+    return -1
 
 
 def part_two(data):
     disk = get_disk(data)
 
-    def get_sequence_start(index, c):
-        start = index
-        while disk[start] == c:
-            start -= 1
-        return start + 1
+    segments = get_segments(disk)
 
-    def get_sequence_end(index, c):
-        end = index
-        while disk[end] == c:
-            end += 1
-        return end - 1
+    files = [(v, i, l) for v, i, l in segments if v != PAD]
+    pads = [(i, l) for v, i, l in segments if v == PAD]
 
-    # print("Before:")
-    # print_disk(disk)
+    while files:
+        val, val_index, val_len = files.pop()
 
-    j = len(disk) - 1
-    while j >= 0:
-        k = get_sequence_start(j, disk[j])
-        dj = j - k + 1
-        if disk[j] == PAD:
-            j -= dj
+        pad_list_index = get_pad_list_index(pads, val_index, val_len)
+
+        found = pad_list_index != -1
+        if not found:
             continue
 
-        # print(f"j: {j}, k: {k}, dj: {dj}")
-        i = 0
-        while i < j - dj:
-            end = get_sequence_end(i, disk[i])
-            di = end - i + 1
-            if disk[i] == PAD and di >= dj:
-                print(f"j: {j}, i: {i}, end: {end}, di: {di}, dj: {dj}")
-                # print(f"i: {i}, end: {end}, di: {di}")
-                ilo, ihi = i, i + dj
-                jlo, jhi = j - dj + 1, j + 1
-                # print(f"ilo: {ilo}, ihi: {ihi}, jlo: {jlo}, jhi: {jhi}")
-                disk[ilo: ihi], disk[jlo:jhi] = disk[jlo:jhi], disk[ilo:ihi]
-                break
-            i += di
-            # i += di
-        # print_disk(disk)
-        j -= dj
+        pad_index, pad_len = pads.pop(pad_list_index)
 
-    # print("After: ")
-    # print_disk(disk)
+        for i in range(pad_index, pad_index + val_len):
+            disk[i] = val
 
-    return sum(i*n if n != PAD else 0 for i, n in enumerate(disk))
+        for i in range(val_index, val_index + val_len):
+            disk[i] = PAD
+
+        diff = pad_len - val_len
+        if diff > 0:
+            new_pad_index = pad_index + val_len
+            pads.append((new_pad_index, diff))
+            pads.sort()
+
+    return get_checksum(disk)
 
 
 def main():
     data = get_data(day=9, year=2024)
-    # data = "2333133121414131402"
     one = part_one(data)
     two = part_two(data)
     print(f"Part one: {one}")
