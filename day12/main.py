@@ -1,7 +1,15 @@
 from aocd import get_data
+import networkx as nx
 import numpy as np
 
-delta = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+DELTA = [
+    (-1, 0),  # North
+    (0, 1),   # East
+    (1, 0),   # South
+    (0, -1),  # West
+]
+
+MAX_NEIGHBORS = 4
 
 
 def parse_data(data):
@@ -12,27 +20,25 @@ def in_bounds(y, x, height, width):
     return 0 <= y < height and 0 <= x < width
 
 
-def on_bound(y, x, height, width):
-    return (y == 0) + (y == height - 1) + (x == 0) + (x == width - 1)
-
-
 def is_different(y, x, c, data):
     if not in_bounds(y, x, len(data), len(data[0])):
         return False
     return data[y][x] != c
 
 
-def flood_fill(p, shape, data, visited):
+def flood_fill(data, p, visited):
     y, x = p
     Q = [(y, x)]
     c = data[y][x]
+    shape = set()
     height, width = len(data), len(data[0])
     while Q:
         y, x = Q.pop()
         if in_bounds(y, x, height, width) and not visited[y, x] and data[y][x] == c:
             visited[y, x] = True
             shape.add((y, x))
-            Q.extend((y + dy, x + dx) for dy, dx in delta)
+            Q.extend((y + dy, x + dx) for dy, dx in DELTA)
+    return shape
 
 
 def get_shapes(data):
@@ -43,28 +49,27 @@ def get_shapes(data):
     shapes = []
     for y in range(height):
         for x in range(width):
-            if visited[y, x]:
-                continue
-            shape = set()
-            flood_fill((y, x), shape, data, visited)
-            shapes.append(shape)
+            if not visited[y, x]:
+                shape = flood_fill(data, (y, x), visited)
+                shapes.append(shape)
 
     return shapes
 
 
-def get_perimeters(data, shapes):
-    height, width = len(data), len(data[0])
+def get_area(shape):
+    return len(shape)
 
-    perimeters = np.zeros((height, width))
 
-    for shape in shapes:
-        for y, x in shape:
-            perimeters[y, x] = sum(
-                (y + dy, x + dx) not in shape
-                for dy, dx in delta
-            )
+def get_open_faces(shape, direction):
+    dy, dx = direction
+    return {(y, x) for y, x in shape if (y + dy, x + dx) not in shape}
 
-    return perimeters
+
+def get_perimeter(shape):
+    return sum(
+        len(get_open_faces(shape, d))
+        for d in DELTA
+    )
 
 
 def part_one(data):
@@ -72,34 +77,54 @@ def part_one(data):
 
     shapes = get_shapes(data)
 
-    areas = [len(shape) for shape in shapes]
+    return sum(get_area(s) * get_perimeter(s) for s in shapes)
 
-    perimeters = get_perimeters(data, shapes)
 
-    ps = [sum(perimeters[y, x] for y, x in shape) for shape in shapes]
+def get_sides(G, shape, direction):
+    open_faces = get_open_faces(shape, direction)
 
-    areas = [int(a) for a in areas]
-    ps = [int(p) for p in ps]
+    sub = nx.induced_subgraph(G, open_faces)
 
-    return sum(a * p for a, p in zip(areas, ps))
+    return list(nx.connected_components(sub))
+
+
+def count_sides(G, shape):
+    sides = (
+        get_sides(G, shape, d)
+        for d in DELTA
+    )
+    side_lens = map(len, sides)
+    return sum(side_lens)
+
+
+def build_graph(shapes):
+    G = nx.Graph()
+
+    for shape in shapes:
+        G.add_nodes_from(shape)
+        edges = (
+            ((y, x), (y + dy, x + dx))
+            for y, x in shape
+            for dy, dx in DELTA
+            if (y + dy, x + dx) in shape
+        )
+        G.add_edges_from(edges)
+
+    return G
 
 
 def part_two(data):
-    return 8
+    data = parse_data(data)
+
+    shapes = get_shapes(data)
+
+    G = build_graph(shapes)
+
+    return sum(get_area(s) * count_sides(G, s) for s in shapes)
 
 
 def main():
     data = get_data(day=12, year=2024)
-#    data = """RRRRIICCFF
-# RRRRIICCCF
-# VVRRRCCFFF
-# VVRCCCJFFF
-# VVVVCJJCFE
-# VVIVCCJJEE
-# VVIIICJJEE
-# MIIIIIJJEE
-# MIIISIJEEE
-# MMMISSJEEE"""
     one = part_one(data)
     two = part_two(data)
     print(f"Part one: {one}")
