@@ -1,42 +1,6 @@
 from aocd import get_data
 from itertools import pairwise
 from functools import lru_cache
-import networkx as nx
-
-
-coord_to_num = {
-    (1, 0): 0,
-    (2, 0): "A",
-    (0, 1): 1,
-    (1, 1): 2,
-    (2, 1): 3,
-    (0, 2): 4,
-    (1, 2): 5,
-    (2, 2): 6,
-    (0, 3): 7,
-    (1, 3): 8,
-    (2, 3): 9,
-}
-
-num_to_coord = {v: k for k, v in coord_to_num.items()}
-
-coord_to_button = {
-    (0, 0): "<",
-    (1, 0): "v",
-    (2, 0): ">",
-    (1, 1): "^",
-    (2, 1): "A",
-}
-button_to_coord = {v: k for k, v in coord_to_button.items()}
-
-char_to_delta = {
-    "^": (0, 1),
-    ">": (1, 0),
-    "v": (0, -1),
-    "<": (-1, 0),
-    "A": (-1, -1),
-}
-delta_to_char = {v: k for k, v in char_to_delta.items()}
 
 # Describes the best (shortest) path to get from the right key to the left key
 possible_paths = {
@@ -204,70 +168,56 @@ possible_paths = {
     ("9", "A"): ["vvv"],
 }
 
+possible_paths = {
+    k: [p + "A" for p in v] for k, v in possible_paths.items()
+}
+
 
 def parse_data(data):
     return data.split("\n")
 
 
 @lru_cache(maxsize=None)
-def get_shortest_path(sequence, depth, max_depth):
-    ss = ["A"]
+def get_shortest_path_length(seq, depth, max_depth):
+    if depth == max_depth:
+        return len(seq)
 
-    if depth > max_depth:
-        return sequence
+    sequence = "A" + seq
 
-    for src, dst in pairwise(sequence):
-        paths = possible_paths[(src, dst)]
+    paths = (possible_paths[(src, dst)] for src, dst in pairwise(sequence))
 
-        if len(paths) == 1:
-            ss = [r + paths[0] + "A" for r in ss]
-        else:
-            ss = [r + p + "A" for r in ss for p in paths]
-
-    lengths = [len(s) for s in ss]
-
-    print(f"Depth: {depth}, Lengths: {lengths}")
-
-    return min((get_shortest_path(s, depth + 1, max_depth) for s in ss), key=len)
+    step_lengths = (
+        (get_shortest_path_length(p, depth + 1, max_depth) for p in ps)
+        for ps in paths
+    )
+    return sum(min(sl) for sl in step_lengths)
 
 
 def extract_digits(s):
     return int("".join(str(n) for n in s if n.isdigit()))
 
 
-def part_one(data):
-    data = parse_data(data)
+def solve(parsed, max_depth):
+    spls = [
+        get_shortest_path_length(code, depth=0, max_depth=max_depth)
+        for code in parsed
+    ]
+    ns = [extract_digits(code) for code in parsed]
+    cs = [spl * n for spl, n in zip(spls, ns)]
+    return sum(cs)
 
-    codes = ["A" + line for line in data]
-    shortest_paths = [get_shortest_path(code, 1, 3) for code in codes]
-    trimmed_paths = [path[1:] for path in shortest_paths]
-    lengths = [len(path) for path in trimmed_paths]
-    numeric = [extract_digits(code) for code in codes]
-    complexities = [a * numeric for a, numeric in zip(lengths, numeric)]
-    return sum(complexities)
+
+def part_one(data):
+    parsed = parse_data(data)
+    return solve(parsed, max_depth=3)
 
 
 def part_two(data):
-    data = parse_data(data)
-
-    codes = ["A" + line for line in data]
-    shortest_paths = [get_shortest_path(code, 1, 3) for code in codes]
-    trimmed_paths = [path[1:] for path in shortest_paths]
-    lengths = [len(path) for path in trimmed_paths]
-    numeric = [
-        int("".join(str(n) for n in code if n.isdigit()))
-        for code in codes
-    ]
-    complexities = [a * numeric for a, numeric in zip(lengths, numeric)]
-    return sum(complexities)
+    parsed = parse_data(data)
+    return solve(parsed, max_depth=26)
 
 
 def main():
-    data = """029A
-980A
-179A
-456A
-379A"""
     data = get_data(day=21, year=2024)
     one = part_one(data)
     two = part_two(data)
